@@ -3,7 +3,7 @@
 # Minimal Bocchi Hyprland Rice - Automated Installation Script
 # =============================================================================
 # This script automates the complete installation of the Bocchi Hyprland rice
-# Supports: Arch Linux, Manjaro, EndeavourOS, and other Arch-based distros
+# Supports: Fedora Workstation 44 and compatible Fedora releases
 # =============================================================================
 
 set -e  # Exit on error
@@ -56,11 +56,11 @@ check_command() {
     return 0
 }
 
-detect_aur_helper() {
-    if check_command yay; then
-        echo "yay"
-    elif check_command paru; then
-        echo "paru"
+package_manager() {
+    if check_command dnf5; then
+        echo "dnf5"
+    elif check_command dnf; then
+        echo "dnf"
     else
         return 1
     fi
@@ -73,21 +73,25 @@ detect_aur_helper() {
 check_prerequisites() {
     print_info "Checking prerequisites..."
     
-    # Check if running on Arch-based distro
+    # Check if running on Fedora
     if ! [ -f /etc/os-release ]; then
-        print_error "Cannot detect OS. This script requires Arch Linux or derivative."
+        print_error "Cannot detect OS. This script requires Fedora Workstation 44."
         exit 1
     fi
     
     source /etc/os-release
-    if ! grep -qi "arch\|manjaro\|endeavour" <<< "$ID $ID_LIKE"; then
-        print_warning "This script is optimized for Arch Linux. Proceeding anyway..."
+    if [ "${ID:-}" != "fedora" ]; then
+        print_error "Unsupported distribution: ${PRETTY_NAME:-unknown}. This script targets Fedora Workstation 44."
+        exit 1
     fi
-    print_step "OS compatibility check passed"
+    if [ "${VERSION_ID%%.*}" -lt 44 ]; then
+        print_warning "Fedora ${VERSION_ID} detected. Fedora 44 or newer is recommended."
+    fi
+    print_step "Fedora compatibility check passed"
     
     # Check for git
     if ! check_command git; then
-        print_error "git is not installed. Install it first: sudo pacman -S git"
+        print_error "git is not installed. Install it first: sudo dnf install git"
         exit 1
     fi
     print_step "git found"
@@ -98,12 +102,12 @@ check_prerequisites() {
     fi
     print_step "sudo access available"
     
-    # Check for pacman
-    if ! check_command pacman; then
-        print_error "pacman not found. This script requires Arch Linux."
+    # Check for dnf
+    if ! package_manager >/dev/null; then
+        print_error "dnf/dnf5 not found. This script requires Fedora."
         exit 1
     fi
-    print_step "pacman package manager found"
+    print_step "Fedora package manager found"
 }
 
 # =============================================================================
@@ -114,7 +118,9 @@ update_system() {
     print_info "Updating system packages..."
     print_warning "This may take a few minutes..."
     
-    sudo pacman -Syu --noconfirm
+    local manager
+    manager=$(package_manager)
+    sudo "$manager" upgrade --refresh -y
     
     print_step "System updated"
 }
@@ -127,12 +133,11 @@ install_core_packages() {
     print_info "Installing core packages..."
     
     local packages=(
-        # Window Manager
+        # Window manager and Wayland session
         "hyprland"
         "hyprutils"
-        
-        # Display Manager
-        "sddm"
+        "hyprlock"
+        "xdg-desktop-portal-hyprland"
         
         # Terminal & Shell
         "kitty"
@@ -141,8 +146,10 @@ install_core_packages() {
         
         # UI & Theming
         "waybar"
-        "rofi"
+        "rofi-wayland"
         "dunst"
+        "swaync"
+        "wlogout"
         
         # File Manager
         "ranger"
@@ -151,70 +158,59 @@ install_core_packages() {
         "neovim"
         
         # Color & Theming
-        "python-pywal"
+        "python3-pywal"
         "swww"
         
         # System Tools
         "btop"
         "cliphist"
         "wl-clipboard"
+        "grim"
+        "slurp"
+        "brightnessctl"
+        "playerctl"
         "imagemagick"
         "jq"
+        "pavucontrol"
+        "NetworkManager-applet"
+        "blueman"
+        "polkit-kde"
         
         # Utilities
         "curl"
         "wget"
-        "base-devel"
+        "gcc"
+        "make"
+        "python3-pillow"
     )
     
-    print_info "Installing from main repositories: ${#packages[@]} packages"
-    sudo pacman -S "${packages[@]}" --noconfirm --needed
+    local manager
+    manager=$(package_manager)
+    print_info "Installing Fedora packages: ${#packages[@]} packages"
+    sudo "$manager" install "${packages[@]}" -y
     
     print_step "Core packages installed"
 }
 
-install_aur_packages() {
-    print_info "Installing AUR packages..."
-    
-    local aur_helper
-    if ! aur_helper=$(detect_aur_helper); then
-        print_warning "No AUR helper found. Installing yay..."
-        cd /tmp
-        git clone https://aur.archlinux.org/yay.git
-        cd yay
-        makepkg -si --noconfirm
-        cd -
-        aur_helper="yay"
-    fi
-    
-    print_info "Using AUR helper: $aur_helper"
-    
-    local aur_packages=(
-        # Hyprland ecosystem
-        "hyprlock"
-        
-        # Themes
-        "tokyonight-gtk-theme-git"
-        "tokyonight-icon-theme-git"
-        "bibata-cursor-theme-bin"
-        "kvantum-theme-catppuccin-git"
-        "kvantummanager"
-        
-        # System tools
-        "catnip"
-        
-        # Optional: Media players
-        "ncspot"
+install_optional_packages() {
+    print_info "Installing optional Fedora packages..."
+
+    local manager
+    manager=$(package_manager)
+    local optional_packages=(
         "cava"
-        
-        # Optional: SDDM theme
-        "sddm-theme-flower"
+        "ncspot"
+        "kvantum"
+        "qt5ct"
     )
-    
-    print_info "Installing from AUR: ${#aur_packages[@]} packages"
-    $aur_helper -S "${aur_packages[@]}" --noconfirm --needed
-    
-    print_step "AUR packages installed"
+
+    for package in "${optional_packages[@]}"; do
+        if ! sudo "$manager" install "$package" -y; then
+            print_warning "Optional package unavailable in enabled Fedora repositories: $package"
+        fi
+    done
+
+    print_step "Optional packages processed"
 }
 
 # =============================================================================
@@ -431,7 +427,9 @@ setup_permissions() {
     print_info "Setting up permissions..."
     
     # Polkit for GUI elevation
-    sudo pacman -S polkit-kde-agent --noconfirm --needed 2>/dev/null || true
+    local manager
+    manager=$(package_manager)
+    sudo "$manager" install polkit-kde -y 2>/dev/null || true
     
     print_step "Permissions configured"
 }
@@ -516,7 +514,7 @@ main() {
     install_core_packages
     echo ""
     
-    install_aur_packages
+    install_optional_packages
     echo ""
     
     # Configuration

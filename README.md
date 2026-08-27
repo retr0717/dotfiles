@@ -4,7 +4,7 @@
   <img src="./Preview/title.png" alt="Minimal Bocchi" style="width: 85%;">
 </p>
 
-<p align="center">First ever 'official' rice. Based on <a href="https://anilist.co/anime/130003/BOCCHI-THE-ROCK/">ぼっち・ざ・ろっく！</a> <br> Created in Arch Linux with Hyprland.
+<p align="center">First ever 'official' rice. Based on <a href="https://anilist.co/anime/130003/BOCCHI-THE-ROCK/">ぼっち・ざ・ろっく！</a> <br> Created with Hyprland and installable on Fedora Workstation 44.
 <br><br>
 <b>Disclaimer: This was all done on my old Acer Spin 3 laptop.</b>
 </p>
@@ -27,7 +27,7 @@ List of programs and tools I use.
 | Launcher 🚀       | [rofi](https://github.com/davatorium/rofi)          |
 | Color Theme 🎨    | [pywal](https://github.com/dylanaraps/pywal) |
 | Lockscreen 🔒     | [hyprlock](https://github.com/hyprwm/hyprlock)  |
-| Login Menu 🚪     | [sddm](https://github.com/sddm/sddm)          |
+| Login Menu 🚪     | GDM (Fedora Workstation default)          |
 | Music Player 🎵   | [ncspot](https://github.com/hrkfdn/ncspot)      |
 | Visualiser 📊     | [cava](https://github.com/karlstav/cava)          |
 | Lyrics 🎤         | [sptlrx](https://github.com/raitonoberu/sptlrx)      |
