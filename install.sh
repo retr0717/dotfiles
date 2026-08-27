@@ -129,11 +129,34 @@ update_system() {
 # Install Dependencies
 # =============================================================================
 
+enable_fedora_repositories() {
+    print_info "Enabling Fedora repositories for Hyprland..."
+
+    local manager
+    local plugin_package
+    manager=$(package_manager)
+    if [ "$manager" = "dnf5" ]; then
+        plugin_package="dnf5-plugins"
+    else
+        plugin_package="dnf-plugins-core"
+    fi
+    sudo "$manager" install "$plugin_package" -y
+
+    if ! sudo "$manager" -y copr enable solopasha/hyprland; then
+        print_error "Could not enable the Fedora Hyprland COPR repository."
+        print_error "Check your network connection and try: sudo $manager -y copr enable solopasha/hyprland"
+        exit 1
+    fi
+
+    print_step "Fedora Hyprland repository enabled"
+}
+
 install_core_packages() {
     print_info "Installing Hyprland and SDDM first..."
 
     local manager
     manager=$(package_manager)
+    enable_fedora_repositories
     local session_packages=(
         "hyprland"
         "hyprutils"
