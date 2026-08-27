@@ -200,7 +200,6 @@ install_core_packages() {
         "neovim"
         
         # Color & Theming
-        "python3-pywal"
         "swww"
         
         # System Tools
@@ -211,10 +210,10 @@ install_core_packages() {
         "slurp"
         "brightnessctl"
         "playerctl"
-        "imagemagick"
+        "ImageMagick"
         "jq"
         "pavucontrol"
-        "NetworkManager-applet"
+        "nm-connection-editor"
         "blueman"
         "polkit-kde"
         
@@ -223,6 +222,7 @@ install_core_packages() {
         "wget"
         "gcc"
         "make"
+        "pipx"
         "python3-pillow"
     )
     
@@ -230,6 +230,18 @@ install_core_packages() {
     sudo "$manager" install "${packages[@]}" -y
     
     print_step "Core packages installed"
+}
+
+install_pywal() {
+    print_info "Installing pywal16 for the rice color scripts..."
+
+    if ! command -v pipx >/dev/null 2>&1; then
+        print_warning "pipx is unavailable; pywal16 was not installed"
+        return
+    fi
+
+    pipx install --force pywal16
+    print_step "pywal16 installed"
 }
 
 install_optional_packages() {
@@ -568,6 +580,9 @@ main() {
     # Installation
     print_info "Installing packages..."
     install_core_packages
+    echo ""
+
+    install_pywal
     echo ""
     
     install_optional_packages
