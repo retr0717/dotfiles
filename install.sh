@@ -143,7 +143,7 @@ enable_fedora_repositories() {
     sudo "$manager" install "$plugin_package" -y
 
     local fedora_chroot="fedora-${VERSION_ID}-x86_64"
-    if sudo "$manager" -y copr enable --chroot "$fedora_chroot" solopasha/hyprland; then
+    if sudo "$manager" -y copr enable solopasha/hyprland "$fedora_chroot"; then
         print_step "Fedora ${VERSION_ID} Hyprland repository enabled"
         return
     fi
@@ -153,7 +153,7 @@ enable_fedora_repositories() {
     read -p "Enable the Rawhide Hyprland repository anyway? (y/N) " -n 1 -r
     echo
 
-    if [[ $REPLY =~ ^[Yy]$ ]] && sudo "$manager" -y copr enable --chroot fedora-rawhide-x86_64 solopasha/hyprland; then
+    if [[ $REPLY =~ ^[Yy]$ ]] && sudo "$manager" -y copr enable solopasha/hyprland fedora-rawhide-x86_64; then
         print_warning "Rawhide Hyprland repository enabled"
     else
         print_error "Could not enable a compatible Fedora Hyprland repository."
