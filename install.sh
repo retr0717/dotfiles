@@ -142,13 +142,24 @@ enable_fedora_repositories() {
     fi
     sudo "$manager" install "$plugin_package" -y
 
-    if ! sudo "$manager" -y copr enable solopasha/hyprland; then
-        print_error "Could not enable the Fedora Hyprland COPR repository."
-        print_error "Check your network connection and try: sudo $manager -y copr enable solopasha/hyprland"
-        exit 1
+    local fedora_chroot="fedora-${VERSION_ID}-x86_64"
+    if sudo "$manager" -y copr enable --chroot "$fedora_chroot" solopasha/hyprland; then
+        print_step "Fedora ${VERSION_ID} Hyprland repository enabled"
+        return
     fi
 
-    print_step "Fedora Hyprland repository enabled"
+    print_warning "The Hyprland COPR has no build for ${fedora_chroot}."
+    print_warning "Its available fallback is Rawhide, which may replace Fedora 44 packages."
+    read -p "Enable the Rawhide Hyprland repository anyway? (y/N) " -n 1 -r
+    echo
+
+    if [[ $REPLY =~ ^[Yy]$ ]] && sudo "$manager" -y copr enable --chroot fedora-rawhide-x86_64 solopasha/hyprland; then
+        print_warning "Rawhide Hyprland repository enabled"
+    else
+        print_error "Could not enable a compatible Fedora Hyprland repository."
+        print_info "Install a COPR build that supports Fedora ${VERSION_ID}, then run this installer again."
+        exit 1
+    fi
 }
 
 install_core_packages() {
