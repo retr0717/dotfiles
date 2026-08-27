@@ -27,7 +27,7 @@ List of programs and tools I use.
 | Launcher 🚀       | [rofi](https://github.com/davatorium/rofi)          |
 | Color Theme 🎨    | [pywal](https://github.com/dylanaraps/pywal) |
 | Lockscreen 🔒     | [hyprlock](https://github.com/hyprwm/hyprlock)  |
-| Login Menu 🚪     | GDM (Fedora Workstation default)          |
+| Login Menu 🚪     | SDDM (installed and selectable by the Fedora installer)          |
 | Music Player 🎵   | [ncspot](https://github.com/hrkfdn/ncspot)      |
 | Visualiser 📊     | [cava](https://github.com/karlstav/cava)          |
 | Lyrics 🎤         | [sptlrx](https://github.com/raitonoberu/sptlrx)      |

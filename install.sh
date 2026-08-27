@@ -130,15 +130,27 @@ update_system() {
 # =============================================================================
 
 install_core_packages() {
-    print_info "Installing core packages..."
-    
-    local packages=(
-        # Window manager and Wayland session
+    print_info "Installing Hyprland and SDDM first..."
+
+    local manager
+    manager=$(package_manager)
+    local session_packages=(
         "hyprland"
         "hyprutils"
         "hyprlock"
+        "sddm"
         "xdg-desktop-portal-hyprland"
-        
+        "xorg-x11-server-Xwayland"
+        "qt6-qtwayland"
+        "dbus-daemon"
+    )
+
+    sudo "$manager" install "${session_packages[@]}" -y
+    print_step "Hyprland and SDDM installed"
+    
+    print_info "Installing remaining rice dependencies..."
+    
+    local packages=(
         # Terminal & Shell
         "kitty"
         "zsh"
@@ -184,8 +196,6 @@ install_core_packages() {
         "python3-pillow"
     )
     
-    local manager
-    manager=$(package_manager)
     print_info "Installing Fedora packages: ${#packages[@]} packages"
     sudo "$manager" install "${packages[@]}" -y
     
@@ -394,6 +404,22 @@ EOF
     fi
 }
 
+setup_display_manager() {
+    print_info "Configuring SDDM as the login manager..."
+    print_warning "GDM is currently Fedora Workstation's default display manager."
+    read -p "Make SDDM the default login manager? (y/N) " -n 1 -r
+    echo
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        sudo systemctl disable gdm.service 2>/dev/null || true
+        sudo systemctl enable sddm.service --force
+        print_step "SDDM enabled; GDM disabled"
+    else
+        print_warning "SDDM is installed but GDM remains the default login manager"
+        print_info "Select the Hyprland session from the GDM session menu after logging in"
+    fi
+}
+
 # =============================================================================
 # Color Scheme Setup
 # =============================================================================
@@ -528,6 +554,7 @@ main() {
     setup_wallpapers
     setup_color_schemes
     setup_hyprland_session
+    setup_display_manager
     setup_permissions
     echo ""
     
